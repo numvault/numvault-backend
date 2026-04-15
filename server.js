@@ -25,7 +25,16 @@ app.get('/health', (req, res) => {
 
 // Routes
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const adminRoutes = require('./routes/admin');
+const paymentRoutes = require('./routes/payment');
+const smsRoutes = require('./routes/sms');
+
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/sms', smsRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
