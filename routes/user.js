@@ -1,29 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
 const pool = require('../db');
+const auth = require('../middleware/auth');
 
-router.get('/profile', authMiddleware, async (req, res) => {
+router.get('/profile', auth, async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, email, username, balance, created_at FROM users WHERE id=$1',
+    const userResult = await pool.query(
+      'SELECT id, email, username, balance, is_admin FROM users WHERE id=$1',
       [req.user.id]
     );
-    res.json(result.rows[0]);
+    const statsResult = await pool.query(
+      'SELECT COUNT(*) as total_activations, COALESCE(SUM(cost),0) as total_spent FROM activations WHERE user_id=$1',
+      [req.user.id]
+    );
+    res.json({ user: userResult.rows[0], stats: statsResult.rows[0] });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/transactions', authMiddleware, async (req, res) => {
+router.get('/history', auth, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM transactions WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50',
+      'SELECT * FROM activations WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50',
       [req.user.id]
     );
-    res.json(result.rows);
+    res.json({ activations: result.rows });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message });
   }
 });
 
